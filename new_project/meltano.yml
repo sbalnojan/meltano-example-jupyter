@@ -1,0 +1,49 @@
+version: 1
+default_environment: dev
+environments:
+- name: dev
+  config:
+  env:
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_DB: demo
+      PG_USER: admin
+      PG_PWD: password
+
+- name: staging
+- name: prod
+
+project_id: 37d81821-1385-4d4e-afae-1ea5cbd06ab5
+plugins:
+  utilities: # meltano invoke jupyter will start up the lab...
+  - name: jupyter
+    namespace: jupyter
+    pip_url: notebook #pandas matplotlib sqlalchemy psycopg2-binary papermill
+    executable: jupyter
+    commands:
+      launch:
+        args: notebook --ip=0.0.0.0 
+        description: Start jupyter notebook server
+
+  - name: jupyterlab
+    namespace: jupyterlab
+    pip_url: jupyterlab pandas matplotlib sqlalchemy psycopg2-binary papermill
+    executable: jupyter
+    commands:
+      launch_ip0:
+        args: lab --ip=0.0.0.0 
+        description: Start lab server, on any ip range for Mac users inside docker.
+      launch:
+        args: lab 
+        description: Start lab server
+      execute:
+        args: nbconvert --to notebook --execute notebook/sql_magic.ipynb
+        description: Start lab server
+          
+  - name: papermill
+    inherit_from: jupyterlab
+    executable: papermill
+    commands:
+      execute:
+        args: notebook/sql_magic.ipynb output/output.ipynb -p price_1 1000
+        description: Start lab server, on any ip range for Mac users inside docker.

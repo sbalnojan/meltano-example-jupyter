@@ -1,0 +1,50 @@
+containers:
+  build-env:
+    image: meltano/meltano:latest-python3.10   #2.4.0-python3.8 #latest-python3.10 #-python3.8
+    working_directory: /new_project
+    run_as_current_user:
+      enabled: true
+      home_directory: /home/container-user
+    volumes:
+      - local: ./new_project
+        container: /new_project
+        options: cached
+   #   - local: ./source
+   #     container: /new_project/source
+   #     options: cached
+    ports:
+      - local: 8888
+        container: 8888
+      - local: 8889
+        container: 8889
+    environment:
+        JUPYTER_ENABLE_LAB: "yes"
+        JUPYTER_TOKEN: "docker"
+  
+  postgres:
+    image: postgres:13.4-bullseye
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: demo
+    ports:
+      - local: 5432
+        container: 5432
+  
+tasks:
+  ## Utility tasks
+  melt:
+    description: Open a shell in our cool meltano env to run some stuff. Make sure to launch_mock in a separate terminal tab!
+    group: Do these tasks
+    dependencies:
+      - postgres
+    run:
+      container: build-env
+      entrypoint: sh
+
+  clean:
+    description: Delete meltano taps and so on to play around with the installation of plugins locally.
+    group: Utility tasks
+    run:
+      container: build-env
+      entrypoint: sh -c 'rm -rf ./meltano/*'
